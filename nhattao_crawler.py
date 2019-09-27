@@ -7,7 +7,8 @@ class Nhattao_crawler():
         self.url = url
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) \
             AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'}
-        self. r = requests.Session()
+        self.params = {'type':'recent', 'search_id':122705679, 'order':'up_time', 'direction':'desc'}
+        self.r = requests.Session()
         
     def _process_datetime(self, soup, class_):
         for dt in soup.find('li', class_=class_):
@@ -66,17 +67,18 @@ class Nhattao_crawler():
         # Determine maximum number of webpages in a category        
         category_page = self.r.get(self.url, headers=self.headers)
         page_content = BeautifulSoup(category_page.text, 'html.parser')
-        return max([int(link.text) for link in page_content.find_all('a', href=re.compile(r'.*?type=recent&search.*')) if link.text.isdigit()])
+        pages = int(page_content.find('span', class_='pageNavHeader').text.split('/')[1])
+        return pages
 
     def get_listings_per_page(self, i):
         listing_links = []
-        url = self.url+'page-{}?type=recent&search_id=122532862&order=up_time&direction=desc'.format(i) 
-        page_listings = self.r.get(url, headers=self.headers)
+        url = self.url+'page-{}'.format(i) 
+        print(url)
+        page_listings = self.r.get(url, headers=self.headers, params=self.params)
         listings = BeautifulSoup(page_listings.text, 'html.parser')
     
         # Grab all listing links from each page
-        for link in listings.find_all('a', attrs={'href': re.compile(r'threads/.*'), \
-                                                  'class': 'Nhattao-CardItem--image'}):
+        for link in listings.find_all('a', attrs={'href': re.compile(r'threads/.*'), 'class': 'Nhattao-CardItem--image'}):
             listing_links.append('https://nhattao.com/'+link.get('href'))
         return listing_links
     
