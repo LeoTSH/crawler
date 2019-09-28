@@ -50,6 +50,18 @@ class Nhattao_crawler():
             location = 'N/A'
         checked.append(location)
         
+        if soup.find('li', class_='threadview-header--viewCount'):
+            seen = int(soup.find('li', class_='threadview-header--viewCount').text.split()[1].replace('.',''))
+        else:
+            seen = 'N/A'
+        checked.append(seen)
+
+        if soup.find('p', class_='threadview-header--classifiedPrice'):
+            price = float(soup.find('p', class_='threadview-header--classifiedPrice').text.strip().replace(' đ', '').replace('.',''))
+        else:
+            price = 0
+        checked.append(price)
+
         if soup.find('span', class_='address'):
             addr = soup.find('span', class_='address').text.strip()
         else:
@@ -67,8 +79,7 @@ class Nhattao_crawler():
         # Determine maximum number of webpages in a category        
         category_page = self.r.get(self.url, headers=self.headers)
         page_content = BeautifulSoup(category_page.text, 'html.parser')
-        pages = int(page_content.find('span', class_='pageNavHeader').text.split('/')[1])
-        return pages
+        return int(page_content.find('div', class_='PageNav')['data-last'])
 
     def get_listings_per_page(self, i):
         listing_links = []
@@ -94,10 +105,10 @@ class Nhattao_crawler():
             'Condition': details[0],
             'Location': details[1],
             'Posted Date': self._process_datetime(data, 'threadview-header--postDate'),
-            'Seen': int(data.find('li', class_='threadview-header--viewCount').text.split()[1].replace('.','')),
-            'Price': float(data.find('p', class_='threadview-header--classifiedPrice').text.strip().replace(' đ', '').replace('.','')),
-            'Contact': details[2],
-            'Address': details[3],
+            'Seen': details[2],
+            'Price': details[3],
+            'Address': details[4],
+            'Contact': details[5],
             'Seller': seller_info[1],
             'Date Joined': seller_info[3],
             'No Products': seller_info[5],
