@@ -1,13 +1,26 @@
-import time, re, json, requests, pandas as pd
+import time, re, requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 
 class Nhattao_crawler():
     def __init__(self, url):
+        '''
+            Creates a Nhattao crawler object to extract and process data from the provided url.
+
+            Args:
+                url (str): Url address of category to extract data from.
+
+            Attributes:
+                headers (dict:str): Contains header information, to be sent when making requests.
+                type (str): Query parameter used to generate full url for requests, retrieves latest data.
+                search_id (str): Query parameter used to generate full url for requests, unique ID for each query.
+                order (str): Query parameter used to generate full url for requests, default ordering for listings.
+                direction (str): Query parameter used to generate full url for requests, default ordering for listings.
+                r (obj): Requests session object to manage requests.
+        '''
         self.url = url
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) \
             AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'}
-        # self.headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'}
         self.type = 'recent'
         self.search_id = ''
         self.order = 'up_time'
@@ -28,9 +41,9 @@ class Nhattao_crawler():
             dt_str = dt_str.split()
             return datetime.timestamp(datetime.strptime(dt_str[0], '%d/%m/%y'))
     
-    def _get_thread_id(self, soup):
-        for data in soup.find_all('link', rel='canonical'):
-            return data.get('href').split('.')[-1].replace('/','')
+    # def _get_thread_id(self, soup):
+    #     for data in soup.find_all('link', rel='canonical'):
+    #         return data.get('href').split('.')[-1].replace('/','')
 
     def _get_seller_info(self, soup):
         tmp = []
@@ -111,7 +124,7 @@ class Nhattao_crawler():
         details = self._check_details(data)
         results = {
             'Thread Link': listing_url,
-            'Thread ID': self._get_thread_id(data),
+            'Thread ID': listing_url.split('.')[-1].replace('/',''),
             'Title': data.find('h2').text,
             'Condition': details[0],
             'Location': details[1],
