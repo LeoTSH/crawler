@@ -16,7 +16,7 @@ class Nhattao_crawler():
                 search_id (str): Query parameter used to generate full url for requests, unique ID for each query.
                 order (str): Query parameter used to generate full url for requests, default ordering for listings.
                 direction (str): Query parameter used to generate full url for requests, default ordering for listings.
-                r (obj): Requests session object to manage requests.
+                r (:obj:requests): Requests session object to manage requests.
         '''
         self.url = url
         self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) \
@@ -28,12 +28,25 @@ class Nhattao_crawler():
         self.r = requests.Session()
     
     def _set_search_id(self):
+        '''
+            Retrieves the Search ID from a request using BeautifulSoup and uses it for remaining requests (Changes for each page).
+        '''
         page = self.r.get(self.url, headers=self.headers)
         soup = BeautifulSoup(page.text, 'html.parser')
         search_id = soup.find('div', class_='PageNav')['data-baseurl'].split('/')[2]
         self.search_id = ''.join(re.findall(r'\d', search_id))
 
     def _process_datetime(self, soup, class_):
+        '''
+            Retrieves the datetime string using BeautifulSoup and parses it into timestamp format.
+
+            Args:
+                soup (:obj:BeautifulSoup): BeautifulSoup object containing the HTML information of a listing.
+                class_ (str): HTML div --> class containing the datetime string.
+
+            Returns:
+                Datetime in timestamp format.
+        '''
         for dt in soup.find('li', class_=class_):
             dt_str = dt.text
             if 'at' in dt_str:
@@ -41,11 +54,16 @@ class Nhattao_crawler():
             dt_str = dt_str.split()
             return datetime.timestamp(datetime.strptime(dt_str[0], '%d/%m/%y'))
     
-    # def _get_thread_id(self, soup):
-    #     for data in soup.find_all('link', rel='canonical'):
-    #         return data.get('href').split('.')[-1].replace('/','')
-
     def _get_seller_info(self, soup):
+        '''
+            Processes infromation regarding the seller and stores them in a list.
+
+            Args:
+                soup (:obj:BeautifulSoup): BeautifulSoup object containing the HTML information of the seller.
+
+            Returns:
+                List of results.
+        '''
         tmp = []
         for info in soup.find('div', class_='threadview-header--seller'):
             tmp.append(info)
@@ -60,6 +78,16 @@ class Nhattao_crawler():
         return tmp
     
     def _check_details(self, soup):
+        '''
+            Verifies if any information from the listing is empty and replaces them with N/A otherwise, the value is used.
+            Results are stored in a list.
+
+            Args:
+                soup (:obj:BeautifulSoup): BeautifulSoup object containing the HTML information of a listing.
+
+            Returns:
+                List of results.
+        '''
         checked = []
         if soup.find('li', class_='threadview-header--classifiedStatus'):
             condition = soup.find('li', class_='threadview-header--classifiedStatus').text
@@ -99,6 +127,12 @@ class Nhattao_crawler():
         return checked
         
     def get_no_pages(self):
+        '''
+            Retrieves the last page number from the webpage.
+
+            Returns:
+                Integer value of last page.
+        '''
         # Determine maximum number of webpages in a category        
         category_page = self.r.get(self.url, headers=self.headers)
         page_content = BeautifulSoup(category_page.text, 'html.parser')

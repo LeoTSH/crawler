@@ -9,7 +9,7 @@ class Chotot_crawler():
         self.page_load_timer = page_load_timer
         self.chrome_options = Options()
         self.chrome_options.headless = True
-        self.driver = webdriver.Chrome('./mac_chromedriver', options=self.chrome_options)
+        self.driver = webdriver.Chrome('./win_chromedriver.exe', options=self.chrome_options)
 
     def _process_details(self, soup):
         process_details = {}
@@ -22,7 +22,6 @@ class Chotot_crawler():
         return process_details
 
     def _process_datetime(self, soup):
-        # year, month, day, hour, minute second, yesterday
         result = ''
         dt = soup.find('div', class_='hidden-xs JfuoT2phEEouoxezYbBx4').text
         if re.findall(r'năm', dt):
